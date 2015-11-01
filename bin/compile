@@ -117,9 +117,6 @@ npm install -g npm@next 2>&1 | indent
 npm_version=$(npm -v)
 status "Using npm version: $npm_version"
 
-npm install bower
-npm install grunt 
-
 # If node_modules directory is checked into source control then
 # rebuild any native deps. Otherwise, restore from the build cache.
 if test -d $build_dir/node_modules; then
