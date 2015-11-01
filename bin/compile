@@ -107,8 +107,6 @@ npm_version=$(npm -v)
 status "Using npm version: $npm_version"
 
 npm install bower
-echo "-----> Doing bower install thing"
-$build_dir/node_modules/.bin/bower install
 
 is_gruntfile_present= [ -f $build_dir/grunt.js ] || [ -f $build_dir/Gruntfile.js ] || [ -f $build_dir/Gruntfile.coffee ];
 if $is_gruntfile_present; then
