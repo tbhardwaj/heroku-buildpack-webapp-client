@@ -63,14 +63,22 @@ if [ ! -e $build_dir/package.json ]; then
 	EOF
 fi
 
-# Add grunt and bower dependecies to package.json to cache them
-status "Augmenting package.json with grunt and grunt-cli"
-$bp_dir/bin/devdeps.py $build_dir/package.json "grunt" "~0.4.5"
-$bp_dir/bin/devdeps.py $build_dir/package.json "grunt-cli" "~0.1.13"
-
-if [ -e $build_dir/bower.json ]; then
-  status "Augmenting package.json with bower"
-  $bp_dir/bin/devdeps.py $build_dir/package.json "bower" "~1.3.12"
+is_gruntfile_present= [ -f $build_dir/grunt.js ] || [ -f $build_dir/Gruntfile.js ] || [ -f $build_dir/Gruntfile.coffee ];
+if $is_gruntfile_present; then
+  status "Found Gruntfile"
+  status "Augmenting package.json with grunt and grunt-cli"
+  # Do this because we want to cache it with other node_modules. Otherwise it will be pruned.
+  # It doesn't matter if grunt and/or grunt-cli is already there
+  awk '{ if ( $0 ~ /"dependencies".*/ ) {
+              printf "%s\n%s\n%s\n", $0, "\"grunt-cli\": \"*\",", "\"grunt\": \"*\",";
+         } else {
+              print $0;
+         }
+    }' package.json > tmp-package.json;
+  cp tmp-package.json package.json;
+  rm tmp-package.json;
+else
+  status "No Gruntfile (grunt.js, Gruntfile.js, Gruntfile.coffee) found"
 fi
 
 # Look in package.json's engines.node field for a semver range
@@ -119,25 +127,6 @@ status "Using npm version: $npm_version"
 npm install bower
 echo "-----> Doing bower install thing"
 $build_dir/node_modules/.bin/bower install
-
-is_gruntfile_present= [ -f $build_dir/grunt.js ] || [ -f $build_dir/Gruntfile.js ] || [ -f $build_dir/Gruntfile.coffee ];
-if $is_gruntfile_present; then
-  status "Found Gruntfile"
-  status "Augmenting package.json with grunt and grunt-cli"
-  # Do this because we want to cache it with other node_modules. Otherwise it will be pruned.
-  # It doesn't matter if grunt and/or grunt-cli is already there
-  awk '{ if ( $0 ~ /"dependencies".*/ ) {
-              printf "%s\n%s\n%s\n", $0, "\"grunt-cli\": \"*\",", "\"grunt\": \"*\",";
-         } else {
-              print $0;
-         }
-    }' package.json > tmp-package.json;
-  cp tmp-package.json package.json;
-  rm tmp-package.json;
-else
-  status "No Gruntfile (grunt.js, Gruntfile.js, Gruntfile.coffee) found"
-fi
-
 
 
 # If node_modules directory is checked into source control then
